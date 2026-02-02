@@ -1,0 +1,19 @@
+{
+     "name": "egypt-tours-docs-mcp",
+     "version": "1.0.0",
+     "description": "MCP server for Egypt Tours documentation",
+     "main": "index.js",
+     "bin": {
+          "egypt-tours-docs-mcp": "./index.js"
+     },
+     "scripts": {
+          "start": "node index.js"
+     },
+     "dependencies": {
+          "@modelcontextprotocol/sdk": "^1.0.0",
+          "glob": "^10.3.10"
+     },
+     "engines": {
+          "node": ">=18.0.0"
+     }
+}

@@ -1,0 +1,11 @@
+{
+     "mcpServers": {
+          "EgyptToursDocs": {
+               "command": "node",
+               "args": [
+                    "/Users/eslamfaisal/Desktop/work/javascript/tours-docs/mcp-server/index.js"
+               ],
+               "type": "stdio"
+          }
+     }
+}

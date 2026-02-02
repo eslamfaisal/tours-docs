@@ -200,7 +200,10 @@ nav:
     - RAG Strategy: ai/rag-strategy.md
     - Guardrails: ai/guardrails.md
     - Conversation Flows: ai/conversation-flows.md
-    - Prompts: ai/prompts.md
+    - Assistant Design: ai/assistant.md
+    - Prompt Engineering: ai/prompts.md
+    - Integration: ai/integration.md
+    - Knowledge Base: ai/knowledge-base.md
   
   - DevOps:
     - devops/index.md

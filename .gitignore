@@ -349,3 +349,5 @@ app.*.map.json
 android/.kotlin/sessions/kotlin-compiler-10349333215347693638.salive
 
 android/.kotlin/sessions/
+
+mcp-server/node_modules/
