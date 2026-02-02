@@ -1,0 +1,263 @@
+{
+     "info": {
+          "_postman_id": "bookings-collection-001",
+          "name": "Egypt Tours - Bookings",
+          "description": "Booking endpoints for creating and managing reservations.\n\nSource: docs/api/bookings.md",
+          "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+     },
+     "auth": {
+          "type": "bearer",
+          "bearer": [
+               {
+                    "key": "token",
+                    "value": "{{accessToken}}",
+                    "type": "string"
+               }
+          ]
+     },
+     "item": [
+          {
+               "name": "Create Booking",
+               "request": {
+                    "method": "POST",
+                    "header": [
+                         {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                         }
+                    ],
+                    "body": {
+                         "mode": "raw",
+                         "raw": "{\n  \"tripId\": 1,\n  \"travelDate\": \"2026-03-15\",\n  \"adults\": 2,\n  \"children\": 1,\n  \"addOns\": [1, 3],\n  \"travelers\": [\n    {\n      \"firstName\": \"John\",\n      \"lastName\": \"Doe\",\n      \"nationality\": \"American\",\n      \"passportNumber\": \"AB1234567\",\n      \"dateOfBirth\": \"1985-05-15\",\n      \"travelerType\": \"ADULT\"\n    },\n    {\n      \"firstName\": \"Jane\",\n      \"lastName\": \"Doe\",\n      \"nationality\": \"American\",\n      \"passportNumber\": \"CD7654321\",\n      \"dateOfBirth\": \"1988-08-20\",\n      \"travelerType\": \"ADULT\"\n    },\n    {\n      \"firstName\": \"Tim\",\n      \"lastName\": \"Doe\",\n      \"nationality\": \"American\",\n      \"dateOfBirth\": \"2018-03-10\",\n      \"travelerType\": \"CHILD\"\n    }\n  ],\n  \"specialRequests\": \"Vegetarian meal preference\"\n}"
+                    },
+                    "url": {
+                         "raw": "{{baseUrl}}/bookings",
+                         "host": [
+                              "{{baseUrl}}"
+                         ],
+                         "path": [
+                              "bookings"
+                         ]
+                    },
+                    "description": "Create a new booking.\n\nSource: docs/api/bookings.md → POST /bookings"
+               },
+               "response": [
+                    {
+                         "name": "Success - 201",
+                         "status": "Created",
+                         "code": 201,
+                         "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": 501,\n    \"bookingNumber\": \"ET-A1B2C3D4\",\n    \"status\": \"PENDING_PAYMENT\",\n    \"totalPrice\": 223.00,\n    \"trip\": {\n      \"slug\": \"pyramids-day-tour\",\n      \"title\": \"Pyramids of Giza Day Tour\"\n    },\n    \"travelDate\": \"2026-03-15\",\n    \"paymentUrl\": \"https://checkout.stripe.com/c/pay/...\"\n  }\n}"
+                    },
+                    {
+                         "name": "Error - Trip Unavailable",
+                         "status": "Unprocessable Entity",
+                         "code": 422,
+                         "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"TRIP_UNAVAILABLE\",\n    \"message\": \"Trip not available on selected date\"\n  }\n}"
+                    }
+               ],
+               "event": [
+                    {
+                         "listen": "test",
+                         "script": {
+                              "type": "text/javascript",
+                              "exec": [
+                                   "pm.test('Status code is 201', function () {",
+                                   "    pm.response.to.have.status(201);",
+                                   "});",
+                                   "",
+                                   "pm.test('Response has booking number', function () {",
+                                   "    var jsonData = pm.response.json();",
+                                   "    pm.expect(jsonData.data).to.have.property('bookingNumber');",
+                                   "});",
+                                   "",
+                                   "if (pm.response.code === 201) {",
+                                   "    var jsonData = pm.response.json();",
+                                   "    pm.environment.set('bookingNumber', jsonData.data.bookingNumber);",
+                                   "}"
+                              ]
+                         }
+                    }
+               ]
+          },
+          {
+               "name": "Get My Bookings",
+               "request": {
+                    "method": "GET",
+                    "url": {
+                         "raw": "{{baseUrl}}/account/bookings?page=1",
+                         "host": [
+                              "{{baseUrl}}"
+                         ],
+                         "path": [
+                              "account",
+                              "bookings"
+                         ],
+                         "query": [
+                              {
+                                   "key": "status",
+                                   "value": "",
+                                   "disabled": true,
+                                   "description": "Filter by status"
+                              },
+                              {
+                                   "key": "page",
+                                   "value": "1"
+                              }
+                         ]
+                    },
+                    "description": "Get current user's bookings.\n\nSource: docs/api/bookings.md → GET /account/bookings"
+               },
+               "response": [
+                    {
+                         "name": "Success - 200",
+                         "status": "OK",
+                         "code": 200,
+                         "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 501,\n      \"bookingNumber\": \"ET-A1B2C3D4\",\n      \"trip\": {\n        \"slug\": \"pyramids-day-tour\",\n        \"title\": \"Pyramids of Giza Day Tour\",\n        \"thumbnail\": \"...\"\n      },\n      \"travelDate\": \"2026-03-15\",\n      \"travelers\": { \"adults\": 2, \"children\": 1 },\n      \"totalPrice\": 223.00,\n      \"status\": \"CONFIRMED\",\n      \"paymentStatus\": \"PAID\",\n      \"createdAt\": \"2026-02-01T10:00:00Z\"\n    }\n  ]\n}"
+                    }
+               ],
+               "event": [
+                    {
+                         "listen": "test",
+                         "script": {
+                              "type": "text/javascript",
+                              "exec": [
+                                   "pm.test('Status code is 200', function () {",
+                                   "    pm.response.to.have.status(200);",
+                                   "});",
+                                   "",
+                                   "pm.test('Response has data array', function () {",
+                                   "    var jsonData = pm.response.json();",
+                                   "    pm.expect(jsonData.data).to.be.an('array');",
+                                   "});"
+                              ]
+                         }
+                    }
+               ]
+          },
+          {
+               "name": "Get Booking Details",
+               "request": {
+                    "method": "GET",
+                    "url": {
+                         "raw": "{{baseUrl}}/account/bookings/{{bookingNumber}}",
+                         "host": [
+                              "{{baseUrl}}"
+                         ],
+                         "path": [
+                              "account",
+                              "bookings",
+                              "{{bookingNumber}}"
+                         ]
+                    },
+                    "description": "Get detailed booking information.\n\nSource: docs/api/bookings.md → GET /account/bookings/{bookingNumber}"
+               },
+               "response": [
+                    {
+                         "name": "Success - 200",
+                         "status": "OK",
+                         "code": 200,
+                         "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": 501,\n    \"bookingNumber\": \"ET-A1B2C3D4\",\n    \"trip\": {\n      \"id\": 1,\n      \"slug\": \"pyramids-day-tour\",\n      \"title\": \"Pyramids of Giza Day Tour\",\n      \"destination\": \"Cairo\",\n      \"duration\": 1,\n      \"thumbnail\": \"...\"\n    },\n    \"travelDate\": \"2026-03-15\",\n    \"travelers\": [\n      {\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"travelerType\": \"ADULT\"\n      }\n    ],\n    \"addOns\": [\n      { \"name\": \"Private Guide\", \"price\": 50.00 }\n    ],\n    \"pricing\": {\n      \"subtotal\": 178.00,\n      \"addOnsTotal\": 50.00,\n      \"discount\": 5.00,\n      \"total\": 223.00,\n      \"currency\": \"USD\"\n    },\n    \"status\": \"CONFIRMED\",\n    \"paymentStatus\": \"PAID\",\n    \"payments\": [\n      {\n        \"amount\": 223.00,\n        \"method\": \"CREDIT_CARD\",\n        \"status\": \"COMPLETED\",\n        \"paidAt\": \"2026-02-01T10:05:00Z\"\n      }\n    ],\n    \"invoice\": {\n      \"url\": \"/api/v1/bookings/ET-A1B2C3D4/invoice\"\n    },\n    \"specialRequests\": \"Vegetarian meal preference\",\n    \"createdAt\": \"2026-02-01T10:00:00Z\"\n  }\n}"
+                    }
+               ],
+               "event": [
+                    {
+                         "listen": "test",
+                         "script": {
+                              "type": "text/javascript",
+                              "exec": [
+                                   "pm.test('Status code is 200', function () {",
+                                   "    pm.response.to.have.status(200);",
+                                   "});",
+                                   "",
+                                   "pm.test('Booking has pricing breakdown', function () {",
+                                   "    var jsonData = pm.response.json();",
+                                   "    pm.expect(jsonData.data).to.have.property('pricing');",
+                                   "    pm.expect(jsonData.data.pricing).to.have.property('total');",
+                                   "});"
+                              ]
+                         }
+                    }
+               ]
+          },
+          {
+               "name": "Cancel Booking",
+               "request": {
+                    "method": "POST",
+                    "header": [
+                         {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                         }
+                    ],
+                    "body": {
+                         "mode": "raw",
+                         "raw": "{\n  \"reason\": \"Change of travel plans\"\n}"
+                    },
+                    "url": {
+                         "raw": "{{baseUrl}}/account/bookings/{{bookingNumber}}/cancel",
+                         "host": [
+                              "{{baseUrl}}"
+                         ],
+                         "path": [
+                              "account",
+                              "bookings",
+                              "{{bookingNumber}}",
+                              "cancel"
+                         ]
+                    },
+                    "description": "Cancel a booking and check refund eligibility.\n\nSource: docs/api/bookings.md → POST /account/bookings/{bookingNumber}/cancel"
+               },
+               "response": [
+                    {
+                         "name": "Success - 200",
+                         "status": "OK",
+                         "code": 200,
+                         "body": "{\n  \"success\": true,\n  \"data\": {\n    \"bookingNumber\": \"ET-A1B2C3D4\",\n    \"status\": \"CANCELLED\",\n    \"refund\": {\n      \"eligible\": true,\n      \"amount\": 167.25,\n      \"percentage\": 75,\n      \"reason\": \"Cancelled 20 days before travel\"\n    }\n  }\n}"
+                    },
+                    {
+                         "name": "Error - Cancellation Not Allowed",
+                         "status": "Unprocessable Entity",
+                         "code": 422,
+                         "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"CANCELLATION_NOT_ALLOWED\",\n    \"message\": \"Cannot cancel booking within 24 hours of travel\"\n  }\n}"
+                    }
+               ]
+          },
+          {
+               "name": "Download Invoice",
+               "request": {
+                    "method": "GET",
+                    "url": {
+                         "raw": "{{baseUrl}}/account/bookings/{{bookingNumber}}/invoice",
+                         "host": [
+                              "{{baseUrl}}"
+                         ],
+                         "path": [
+                              "account",
+                              "bookings",
+                              "{{bookingNumber}}",
+                              "invoice"
+                         ]
+                    },
+                    "description": "Download booking invoice as PDF.\n\nSource: docs/api/bookings.md → GET /account/bookings/{bookingNumber}/invoice"
+               },
+               "response": [
+                    {
+                         "name": "Success - PDF Download",
+                         "status": "OK",
+                         "code": 200,
+                         "header": [
+                              {
+                                   "key": "Content-Type",
+                                   "value": "application/pdf"
+                              },
+                              {
+                                   "key": "Content-Disposition",
+                                   "value": "attachment; filename=invoice-ET-A1B2C3D4.pdf"
+                              }
+                         ],
+                         "body": "[PDF Binary Content]"
+                    }
+               ]
+          }
+     ]
+}

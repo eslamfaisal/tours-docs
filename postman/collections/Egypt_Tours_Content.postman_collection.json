@@ -1,0 +1,277 @@
+{
+     "info": {
+          "_postman_id": "content-collection-001",
+          "name": "Egypt Tours - Content",
+          "description": "Blog, Vlogs, Destinations, Search, and Contact endpoints.\n\nSource: docs/api/content.md",
+          "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+     },
+     "item": [
+          {
+               "name": "Blog",
+               "item": [
+                    {
+                         "name": "List Blog Posts",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/blog?page=1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "blog"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "category",
+                                             "value": "",
+                                             "disabled": true,
+                                             "description": "Filter by category"
+                                        },
+                                        {
+                                             "key": "tag",
+                                             "value": "",
+                                             "disabled": true,
+                                             "description": "Filter by tag"
+                                        },
+                                        {
+                                             "key": "search",
+                                             "value": "",
+                                             "disabled": true,
+                                             "description": "Search in title/content"
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        }
+                                   ]
+                              },
+                              "description": "Get list of blog posts.\n\nSource: docs/api/content.md → GET /blog"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"slug\": \"best-time-to-visit-egypt\",\n      \"title\": \"Best Time to Visit Egypt\",\n      \"excerpt\": \"Planning your Egypt trip? Here's when to go...\",\n      \"thumbnail\": \"...\",\n      \"category\": \"Travel Tips\",\n      \"author\": { \"name\": \"Egypt Tours Team\" },\n      \"publishedAt\": \"2026-01-20T10:00:00Z\"\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"totalItems\": 25\n  }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Blog Post",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/blog/best-time-to-visit-egypt",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "blog",
+                                        "best-time-to-visit-egypt"
+                                   ]
+                              },
+                              "description": "Get full blog post content.\n\nSource: docs/api/content.md → GET /blog/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"slug\": \"best-time-to-visit-egypt\",\n    \"title\": \"Best Time to Visit Egypt\",\n    \"content\": \"Full markdown content...\",\n    \"category\": \"Travel Tips\",\n    \"tags\": [\"planning\", \"weather\", \"seasons\"],\n    \"author\": { \"name\": \"Egypt Tours Team\" },\n    \"publishedAt\": \"2026-01-20T10:00:00Z\",\n    \"relatedPosts\": []\n  }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Vlogs",
+               "item": [
+                    {
+                         "name": "List Vlogs",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/vlogs",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "vlogs"
+                                   ]
+                              },
+                              "description": "Get list of vlogs/videos.\n\nSource: docs/api/content.md → GET /vlogs"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"slug\": \"exploring-luxor-temples\",\n      \"title\": \"Exploring Luxor Temples\",\n      \"thumbnail\": \"...\",\n      \"videoUrl\": \"https://youtube.com/...\",\n      \"duration\": \"12:30\",\n      \"publishedAt\": \"2026-01-15T10:00:00Z\"\n    }\n  ]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Vlog",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/vlogs/exploring-luxor-temples",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "vlogs",
+                                        "exploring-luxor-temples"
+                                   ]
+                              },
+                              "description": "Get full vlog details.\n\nSource: docs/api/content.md → GET /vlogs/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"slug\": \"exploring-luxor-temples\",\n    \"title\": \"Exploring Luxor Temples\",\n    \"description\": \"Full description...\",\n    \"videoUrl\": \"https://youtube.com/...\",\n    \"duration\": \"12:30\",\n    \"relatedTrips\": []\n  }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Destinations",
+               "item": [
+                    {
+                         "name": "List Destinations",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/destinations",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "destinations"
+                                   ]
+                              },
+                              "description": "Get list of destinations.\n\nSource: docs/api/content.md → GET /destinations"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"slug\": \"cairo\",\n      \"name\": \"Cairo\",\n      \"description\": \"The vibrant capital...\",\n      \"thumbnail\": \"...\",\n      \"tripCount\": 15\n    },\n    {\n      \"slug\": \"luxor\",\n      \"name\": \"Luxor\",\n      \"description\": \"Ancient temples...\",\n      \"thumbnail\": \"...\",\n      \"tripCount\": 12\n    }\n  ]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Destination",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/destinations/cairo",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "destinations",
+                                        "cairo"
+                                   ]
+                              },
+                              "description": "Get destination details with trips.\n\nSource: docs/api/content.md → GET /destinations/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"slug\": \"cairo\",\n    \"name\": \"Cairo\",\n    \"description\": \"Full description...\",\n    \"images\": [],\n    \"highlights\": [\"Pyramids\", \"Egyptian Museum\", \"Khan el-Khalili\"],\n    \"trips\": []\n  }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Search",
+               "item": [
+                    {
+                         "name": "Global Search",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/search?q=pyramids",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "search"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "q",
+                                             "value": "pyramids",
+                                             "description": "Search query"
+                                        },
+                                        {
+                                             "key": "type",
+                                             "value": "",
+                                             "disabled": true,
+                                             "description": "trips, blog, destinations"
+                                        }
+                                   ]
+                              },
+                              "description": "Global search across trips, blog, and destinations.\n\nSource: docs/api/content.md → GET /search"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"trips\": [\n      { \"slug\": \"pyramids-day-tour\", \"title\": \"Pyramids of Giza Day Tour\" }\n    ],\n    \"blog\": [],\n    \"destinations\": [\n      { \"slug\": \"cairo\", \"name\": \"Cairo\" }\n    ]\n  }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Contact",
+               "item": [
+                    {
+                         "name": "Submit Contact Form",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+1234567890\",\n  \"subject\": \"Trip Inquiry\",\n  \"message\": \"I would like to know more about...\",\n  \"tripSlug\": \"pyramids-day-tour\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/contact",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "contact"
+                                   ]
+                              },
+                              "description": "Submit a contact/inquiry form.\n\nSource: docs/api/content.md → POST /contact"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Thank you for your inquiry. We will get back to you within 24 hours.\"\n}"
+                              }
+                         ]
+                    }
+               ]
+          }
+     ]
+}
