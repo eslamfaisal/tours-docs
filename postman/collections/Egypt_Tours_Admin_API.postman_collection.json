@@ -1,0 +1,1027 @@
+{
+     "info": {
+          "_postman_id": "egypt-tours-admin-api",
+          "name": "Egypt Tours - Admin API",
+          "description": "Admin-only API for managing the Egypt Tours Platform.\n\nRequires admin role. Organized by feature folders.\n\nSource: docs/api/",
+          "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+     },
+     "auth": {
+          "type": "bearer",
+          "bearer": [
+               {
+                    "key": "token",
+                    "value": "{{accessToken}}",
+                    "type": "string"
+               }
+          ]
+     },
+     "event": [
+          {
+               "listen": "prerequest",
+               "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                         "// Auto-refresh token if expired",
+                         "const tokenExpiry = pm.environment.get('tokenExpiry');",
+                         "const now = Date.now();",
+                         "if (tokenExpiry && now > tokenExpiry - 60000) {",
+                         "    pm.sendRequest({",
+                         "        url: pm.environment.get('baseUrl') + '/auth/refresh',",
+                         "        method: 'POST',",
+                         "        header: { 'Content-Type': 'application/json' },",
+                         "        body: { mode: 'raw', raw: JSON.stringify({ refreshToken: pm.environment.get('refreshToken') }) }",
+                         "    }, function (err, res) {",
+                         "        if (res && res.code === 200) {",
+                         "            var data = res.json();",
+                         "            pm.environment.set('accessToken', data.data.accessToken);",
+                         "            pm.environment.set('tokenExpiry', Date.now() + 3600000);",
+                         "        }",
+                         "    });",
+                         "}"
+                    ]
+               }
+          }
+     ],
+     "item": [
+          {
+               "name": "Auth (Admin)",
+               "description": "Admin login endpoints.\n\nSource: docs/api/auth.md",
+               "item": [
+                    {
+                         "name": "Admin Login",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/login",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "login"
+                                   ]
+                              },
+                              "description": "Login as admin user.\n\nSource: docs/api/auth.md → POST /auth/login"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"accessToken\": \"...\",\n    \"refreshToken\": \"...\",\n    \"expiresIn\": 3600,\n    \"user\": { \"id\": 1, \"email\": \"admin@egypttours.com\", \"role\": \"ADMIN\" }\n  }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "prerequest",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "pm.environment.unset('accessToken');",
+                                             "pm.environment.unset('refreshToken');"
+                                        ]
+                                   }
+                              },
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "if (pm.response.code === 200) {",
+                                             "  var d = pm.response.json();",
+                                             "  pm.environment.set('accessToken', d.data.accessToken);",
+                                             "  pm.environment.set('refreshToken', d.data.refreshToken);",
+                                             "  pm.environment.set('tokenExpiry', Date.now() + (d.data.expiresIn * 1000));",
+                                             "}"
+                                        ]
+                                   }
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Trips Management",
+               "description": "Create, update, delete trips.\n\nSource: docs/api/trips.md",
+               "item": [
+                    {
+                         "name": "Create Trip",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"slug\": \"new-cairo-tour\",\n  \"destinationId\": 1,\n  \"duration\": 1,\n  \"tripType\": \"DAY_TOUR\",\n  \"basePrice\": 99.00,\n  \"maxCapacity\": 20,\n  \"bookingMode\": \"INSTANT\",\n  \"translations\": [\n    { \"locale\": \"en\", \"title\": \"New Cairo Tour\", \"description\": \"...\", \"shortDescription\": \"...\" },\n    { \"locale\": \"es\", \"title\": \"Nuevo Tour de El Cairo\", \"description\": \"...\", \"shortDescription\": \"...\" },\n    { \"locale\": \"ar\", \"title\": \"جولة القاهرة الجديدة\", \"description\": \"...\", \"shortDescription\": \"...\" }\n  ],\n  \"itinerary\": [{ \"time\": \"08:00\", \"title\": \"Hotel Pickup\", \"description\": \"...\" }],\n  \"included\": [\"Transport\", \"Guide\", \"Lunch\"],\n  \"excluded\": [\"Tips\"]\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/trips",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "trips"
+                                   ]
+                              },
+                              "description": "Create new trip.\n\nSource: docs/api/trips.md → POST /admin/trips"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 201",
+                                   "status": "Created",
+                                   "code": 201,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 50, \"slug\": \"new-cairo-tour\", \"status\": \"DRAFT\" }\n}"
+                              },
+                              {
+                                   "name": "Error - Forbidden",
+                                   "status": "Forbidden",
+                                   "code": 403,
+                                   "body": "{\n  \"success\": false,\n  \"error\": { \"code\": \"FORBIDDEN\", \"message\": \"Admin access required\" }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "if (pm.response.code === 201) { pm.environment.set('tripId', pm.response.json().data.id); }"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Update Trip",
+                         "request": {
+                              "method": "PUT",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"basePrice\": 109.00,\n  \"maxCapacity\": 25,\n  \"status\": \"PUBLISHED\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/trips/{{tripId}}",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "trips",
+                                        "{{tripId}}"
+                                   ]
+                              },
+                              "description": "Update trip.\n\nSource: docs/api/trips.md → PUT /admin/trips/{id}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Trip updated\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Delete Trip",
+                         "request": {
+                              "method": "DELETE",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/trips/{{tripId}}",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "trips",
+                                        "{{tripId}}"
+                                   ]
+                              },
+                              "description": "Delete trip (soft delete).\n\nSource: docs/api/trips.md → DELETE /admin/trips/{id}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Trip deleted\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "List All Trips",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/trips?page=1&status=DRAFT",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "trips"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        },
+                                        {
+                                             "key": "status",
+                                             "value": "DRAFT"
+                                        }
+                                   ]
+                              },
+                              "description": "List all trips including drafts.\n\nSource: docs/api/trips.md → GET /admin/trips"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [],\n  \"pagination\": { \"page\": 1, \"totalItems\": 50 }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Bookings Management",
+               "description": "View reand manage all bookings.\n\nSource: docs/api/bookings.md",
+               "item": [
+                    {
+                         "name": "List All Bookings",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/bookings?page=1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "bookings"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "status",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "from",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "to",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        }
+                                   ]
+                              },
+                              "description": "List all bookings.\n\nSource: docs/api/bookings.md → GET /admin/bookings"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [],\n  \"pagination\": { \"page\": 1, \"totalItems\": 150 }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Booking Details",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/bookings/{{bookingId}}",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "bookings",
+                                        "{{bookingId}}"
+                                   ]
+                              },
+                              "description": "Get full booking details.\n\nSource: docs/api/bookings.md → GET /admin/bookings/{id}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 501, \"bookingNumber\": \"ET-A1B2C3D4\", \"user\": {}, \"trip\": {}, \"travelers\": [], \"pricing\": {} }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Update Booking Status",
+                         "request": {
+                              "method": "PATCH",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/bookings/{{bookingId}}/status",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "bookings",
+                                        "{{bookingId}}",
+                                        "status"
+                                   ]
+                              },
+                              "description": "Update booking status.\n\nSource: docs/api/bookings.md → PATCH /admin/bookings/{id}/status"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Status updated\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Process Refund",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"amount\": 167.25,\n  \"reason\": \"Customer requested cancellation\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/bookings/{{bookingId}}/refund",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "bookings",
+                                        "{{bookingId}}",
+                                        "refund"
+                                   ]
+                              },
+                              "description": "Process a refund.\n\nSource: docs/api/bookings.md → POST /admin/bookings/{id}/refund"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"refundId\": \"ref_123\", \"amount\": 167.25, \"status\": \"PROCESSED\" }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Users Management",
+               "description": "Manage platform users.\n\nSource: docs/api/users.md",
+               "item": [
+                    {
+                         "name": "List Users",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/users?page=1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "users"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "role",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "search",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        }
+                                   ]
+                              },
+                              "description": "List all users.\n\nSource: docs/api/users.md → GET /admin/users"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [],\n  \"pagination\": { \"page\": 1, \"totalItems\": 500 }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get User Details",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/users/{{userId}}",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "users",
+                                        "{{userId}}"
+                                   ]
+                              },
+                              "description": "Get user details with stats.\n\nSource: docs/api/users.md → GET /admin/users/{id}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 12345, \"email\": \"user@example.com\", \"firstName\": \"John\", \"role\": \"CUSTOMER\", \"bookingsCount\": 5, \"totalSpent\": 1250.00 }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Update User Role",
+                         "request": {
+                              "method": "PATCH",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"role\": \"EDITOR\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/users/{{userId}}/role",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "users",
+                                        "{{userId}}",
+                                        "role"
+                                   ]
+                              },
+                              "description": "Update user role.\n\nSource: docs/api/users.md → PATCH /admin/users/{id}/role"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Role updated to EDITOR\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Disable User",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"reason\": \"Policy violation\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/users/{{userId}}/disable",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "users",
+                                        "{{userId}}",
+                                        "disable"
+                                   ]
+                              },
+                              "description": "Disable user account.\n\nSource: docs/api/users.md → POST /admin/users/{id}/disable"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"User disabled\"\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Destinations Management",
+               "description": "Manage destinations.\n\nSource: docs/api/content.md",
+               "item": [
+                    {
+                         "name": "Create Destination",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"slug\": \"aswan\",\n  \"translations\": [\n    { \"locale\": \"en\", \"name\": \"Aswan\", \"description\": \"...\" },\n    { \"locale\": \"es\", \"name\": \"Asuán\", \"description\": \"...\" },\n    { \"locale\": \"ar\", \"name\": \"أسوان\", \"description\": \"...\" }\n  ],\n  \"highlights\": [\"Philae Temple\", \"High Dam\", \"Nubian Villages\"]\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/destinations",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "destinations"
+                                   ]
+                              },
+                              "description": "Create destination.\n\nSource: docs/api/content.md → POST /admin/destinations"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 201",
+                                   "status": "Created",
+                                   "code": 201,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 5, \"slug\": \"aswan\" }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Update Destination",
+                         "request": {
+                              "method": "PUT",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"highlights\": [\"Philae Temple\", \"High Dam\", \"Nubian Villages\", \"Felucca Rides\"]\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/destinations/aswan",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "destinations",
+                                        "aswan"
+                                   ]
+                              },
+                              "description": "Update destination.\n\nSource: docs/api/content.md → PUT /admin/destinations/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Destination updated\"\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Content Management",
+               "description": "Manage blog and vlogs.\n\nSource: docs/api/content.md",
+               "item": [
+                    {
+                         "name": "Create Blog Post",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"slug\": \"top-10-egypt-tips\",\n  \"category\": \"Travel Tips\",\n  \"translations\": [\n    { \"locale\": \"en\", \"title\": \"Top 10 Egypt Travel Tips\", \"content\": \"...\" }\n  ],\n  \"tags\": [\"tips\", \"travel\", \"egypt\"],\n  \"status\": \"DRAFT\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/blog",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "blog"
+                                   ]
+                              },
+                              "description": "Create blog post.\n\nSource: docs/api/content.md → POST /admin/blog"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 201",
+                                   "status": "Created",
+                                   "code": 201,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 25, \"slug\": \"top-10-egypt-tips\", \"status\": \"DRAFT\" }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Update Blog Post",
+                         "request": {
+                              "method": "PUT",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"status\": \"PUBLISHED\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/blog/top-10-egypt-tips",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "blog",
+                                        "top-10-egypt-tips"
+                                   ]
+                              },
+                              "description": "Update blog post.\n\nSource: docs/api/content.md → PUT /admin/blog/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Blog post updated\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Delete Blog Post",
+                         "request": {
+                              "method": "DELETE",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/blog/top-10-egypt-tips",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "blog",
+                                        "top-10-egypt-tips"
+                                   ]
+                              },
+                              "description": "Delete blog post.\n\nSource: docs/api/content.md → DELETE /admin/blog/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Blog post deleted\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Create Vlog",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"slug\": \"nile-cruise-experience\",\n  \"videoUrl\": \"https://youtube.com/watch?v=...\",\n  \"translations\": [\n    { \"locale\": \"en\", \"title\": \"Nile Cruise Experience\", \"description\": \"...\" }\n  ],\n  \"relatedTripIds\": [5, 12]\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/vlogs",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "vlogs"
+                                   ]
+                              },
+                              "description": "Create vlog.\n\nSource: docs/api/content.md → POST /admin/vlogs"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 201",
+                                   "status": "Created",
+                                   "code": 201,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 10, \"slug\": \"nile-cruise-experience\" }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Reviews Management",
+               "description": "Moderate reviews.\n\nSource: docs/api/trips.md",
+               "item": [
+                    {
+                         "name": "List Pending Reviews",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/reviews?status=PENDING&page=1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "reviews"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "status",
+                                             "value": "PENDING"
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        }
+                                   ]
+                              },
+                              "description": "List reviews for moderation.\n\nSource: docs/api/trips.md → GET /admin/reviews"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [],\n  \"pagination\": { \"page\": 1, \"totalItems\": 10 }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Approve Review",
+                         "request": {
+                              "method": "POST",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/reviews/{{reviewId}}/approve",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "reviews",
+                                        "{{reviewId}}",
+                                        "approve"
+                                   ]
+                              },
+                              "description": "Approve a review.\n\nSource: docs/api/trips.md → POST /admin/reviews/{id}/approve"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Review approved\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Reject Review",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"reason\": \"Inappropriate content\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/reviews/{{reviewId}}/reject",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "reviews",
+                                        "{{reviewId}}",
+                                        "reject"
+                                   ]
+                              },
+                              "description": "Reject a review.\n\nSource: docs/api/trips.md → POST /admin/reviews/{id}/reject"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Review rejected\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Reply to Review",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"comment\": \"Thank you for your feedback!\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/reviews/{{reviewId}}/reply",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "reviews",
+                                        "{{reviewId}}",
+                                        "reply"
+                                   ]
+                              },
+                              "description": "Reply to review as business.\n\nSource: docs/api/trips.md → POST /admin/reviews/{id}/reply"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Reply added\"\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Analytics",
+               "description": "Dashboard statistics.\n\nSource: docs/api/admin.md",
+               "item": [
+                    {
+                         "name": "Dashboard Stats",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/dashboard",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "dashboard"
+                                   ]
+                              },
+                              "description": "Get dashboard statistics.\n\nSource: docs/api/admin.md → GET /admin/dashboard"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"totalBookings\": 150,\n    \"revenue\": { \"today\": 1500, \"month\": 45000 },\n    \"users\": { \"total\": 500, \"new\": 25 },\n    \"pendingBookings\": 5,\n    \"pendingReviews\": 10\n  }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Revenue Report",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/reports/revenue?from=2026-01-01&to=2026-01-31",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "reports",
+                                        "revenue"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "from",
+                                             "value": "2026-01-01"
+                                        },
+                                        {
+                                             "key": "to",
+                                             "value": "2026-01-31"
+                                        }
+                                   ]
+                              },
+                              "description": "Get revenue report.\n\nSource: docs/api/admin.md → GET /admin/reports/revenue"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"period\": { \"from\": \"2026-01-01\", \"to\": \"2026-01-31\" },\n    \"totalRevenue\": 45000,\n    \"bookingsCount\": 120,\n    \"byTrip\": [],\n    \"byDestination\": []\n  }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Popular Trips Report",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/admin/reports/popular-trips?limit=10",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "admin",
+                                        "reports",
+                                        "popular-trips"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "limit",
+                                             "value": "10"
+                                        }
+                                   ]
+                              },
+                              "description": "Get popular trips.\n\nSource: docs/api/admin.md → GET /admin/reports/popular-trips"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"trip\": { \"slug\": \"pyramids-day-tour\", \"title\": \"Pyramids Tour\" }, \"bookingsCount\": 45, \"revenue\": 4500 }]\n}"
+                              }
+                         ]
+                    }
+               ]
+          }
+     ]
+}

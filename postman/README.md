@@ -1,88 +1,63 @@
 # Egypt Tours API - Postman Collections
 
-Complete Postman-ready API contract for the Egypt Tours Booking Platform.
+Complete API contract for parallel frontend/backend development.
 
 ## Quick Start
 
-1. **Import Environments**: Import one of the environment files based on your target:
-   - `environments/Egypt_Tours_Dev.postman_environment.json` - Local development
-   - `environments/Egypt_Tours_Staging.postman_environment.json` - Staging server
-   - `environments/Egypt_Tours_Prod.postman_environment.json` - Production
-   - `environments/Egypt_Tours_Mock.postman_environment.json` - Mock server (frontend dev)
-
-2. **Import Collections**: Import all collection files from `collections/`
-
-3. **Set Active Environment**: Select your imported environment in Postman
-
-4. **Start with Login**: Run `Auth > Login` to auto-populate tokens
+1. **Import Master Environment**: `environments/Egypt_Tours_Master.postman_environment.json`
+2. **Import Collections**:
+   - `Egypt_Tours_User_API.postman_collection.json` - Frontend team
+   - `Egypt_Tours_Admin_API.postman_collection.json` - Backoffice team
+3. **Change `baseUrl`** based on target environment:
+   - Dev: `http://localhost:8080/api/v1`
+   - Staging: `https://api-staging.egypttours.com/api/v1`
+   - Production: `https://api.egypttours.com/api/v1`
+4. **Run Login** to auto-populate tokens
 
 ---
 
-## Collections Overview
+## Collections
 
-| Collection | Endpoints | Description |
-|------------|-----------|-------------|
-| **Auth** | 9 | Register, login, OAuth, password reset |
-| **Trips** | 5 | Browse trips, details, reviews, availability |
-| **Bookings** | 5 | Create, manage, cancel bookings |
-| **Users** | 6 | Profile & wishlist management |
-| **Content** | 9 | Blog, vlogs, destinations, search |
-| **Admin** | 9 | Trip/booking/user management |
+### User API (Frontend)
 
-**Total: 43 endpoints**
+| Folder | Endpoints | Description |
+|--------|-----------|-------------|
+| Auth | 9 | Register, login, OAuth, password reset |
+| Trips | 4 | Browse, details, reviews, availability |
+| Bookings | 5 | Create, view, cancel reservations |
+| Account | 3 | Profile management |
+| Wishlist | 3 | Saved trips |
+| Destinations | 2 | Destination pages |
+| Blog | 2 | Travel articles |
+| Vlogs | 2 | Travel videos |
+| Search | 1 | Global search |
+| Contact | 1 | Inquiry form |
 
----
+**Total: 34 endpoints**
 
-## Token Management
+### Admin API (Backoffice)
 
-All collections include automatic token management:
+| Folder | Endpoints | Description |
+|--------|-----------|-------------|
+| Auth (Admin) | 1 | Admin login |
+| Trips Management | 4 | CRUD trips |
+| Bookings Management | 4 | View, update, refund |
+| Users Management | 4 | View, roles, disable |
+| Destinations Management | 2 | CRUD destinations |
+| Content Management | 4 | Blog, vlogs |
+| Reviews Management | 4 | Moderation |
+| Analytics | 3 | Dashboard, reports |
 
-- **Login** auto-saves `accessToken` and `refreshToken` to environment
-- **Protected requests** auto-refresh tokens when expired
-- **Logout** clears tokens from environment
-
----
-
-## Documentation Mapping
-
-Every endpoint includes source traceability:
-
-| Endpoint | Documentation Source |
-|----------|---------------------|
-| `POST /auth/register` | `docs/api/auth.md` |
-| `POST /auth/login` | `docs/api/auth.md` |
-| `GET /trips` | `docs/api/trips.md` |
-| `GET /trips/{slug}` | `docs/api/trips.md` |
-| `POST /bookings` | `docs/api/bookings.md` |
-| `GET /account/profile` | `docs/api/users.md` |
-| `GET /blog` | `docs/api/content.md` |
-| `POST /admin/trips` | `docs/api/trips.md` |
+**Total: 27 endpoints (61 total)**
 
 ---
 
-## For Frontend Team
+## Features
 
-Use the **Mock Environment** for parallel development:
-
-- Pre-filled tokens (no login required)
-- All example responses included
-- Can work before backend is ready
-
-## For Backend Team
-
-Implement endpoints to match:
-
-- Request schemas
-- Response formats
-- Error codes from `docs/api/errors.md`
-
-## For QA Team
-
-Each request includes test scripts for:
-
-- Status code validation
-- Response schema validation
-- Required field checks
+- ✅ **Auto-token management** - Login saves tokens, requests auto-refresh
+- ✅ **Test scripts** - Response validation
+- ✅ **Example responses** - Success & error cases
+- ✅ **Source traceability** - Links to MkDocs API docs
 
 ---
 
@@ -90,13 +65,23 @@ Each request includes test scripts for:
 
 | Variable | Description |
 |----------|-------------|
-| `baseUrl` | API base URL |
-| `email` | Test user email |
-| `password` | Test user password |
-| `accessToken` | JWT access token (auto-populated) |
-| `refreshToken` | Refresh token (auto-populated) |
-| `tokenExpiry` | Token expiry timestamp |
-| `adminEmail` | Admin user email |
-| `adminPassword` | Admin password |
-| `language` | Content locale (en, es, ar) |
-| `bookingNumber` | Last created booking (auto-populated) |
+| `baseUrl` | API base URL (change per env) |
+| `environment` | dev, staging, prod, mock |
+| `email` / `password` | Test user credentials |
+| `adminEmail` / `adminPassword` | Admin credentials |
+| `accessToken` / `refreshToken` | JWT tokens (auto) |
+| `tripSlug` / `tripId` | Trip identifiers |
+| `bookingNumber` / `bookingId` | Booking identifiers |
+
+---
+
+## Documentation Source
+
+All endpoints are generated from:
+
+- `docs/api/auth.md`
+- `docs/api/trips.md`
+- `docs/api/bookings.md`
+- `docs/api/users.md`
+- `docs/api/content.md`
+- `docs/api/errors.md`

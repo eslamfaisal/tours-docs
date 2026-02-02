@@ -1,71 +1,70 @@
 # Postman Environments
 
-## Environment Files
+## Master Environment File
 
-| Environment | File |
-|-------------|------|
-| Development | `Egypt_Tours_Dev.postman_environment.json` |
-| Staging | `Egypt_Tours_Staging.postman_environment.json` |
-| Production | `Egypt_Tours_Prod.postman_environment.json` |
+Use the **single master environment** and change `baseUrl` per target:
 
----
-
-## Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `baseUrl` | API base URL | `http://localhost:8080/api/v1` |
-| `email` | Test user email | `test@example.com` |
-| `password` | Test user password | `TestP@ss123` |
-| `accessToken` | JWT access token | (auto-populated) |
-| `refreshToken` | JWT refresh token | (auto-populated) |
-| `adminEmail` | Admin user email | `admin@egypttours.com` |
-| `adminPassword` | Admin password | - |
-
----
-
-## Environment JSON
-
-```json
-{
-  "id": "dev-env",
-  "name": "Egypt Tours Dev",
-  "values": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:8080/api/v1",
-      "enabled": true
-    },
-    {
-      "key": "email",
-      "value": "test@example.com",
-      "enabled": true
-    },
-    {
-      "key": "password",
-      "value": "TestP@ss123",
-      "enabled": true
-    },
-    {
-      "key": "accessToken",
-      "value": "",
-      "enabled": true
-    },
-    {
-      "key": "refreshToken",
-      "value": "",
-      "enabled": true
-    }
-  ]
-}
+```
+postman/environments/Egypt_Tours_Master.postman_environment.json
 ```
 
 ---
 
 ## Environment URLs
 
-| Environment | Base URL |
-|-------------|----------|
-| Development | `http://localhost:8080/api/v1` |
-| Staging | `https://api-staging.egypttours.com/api/v1` |
-| Production | `https://api.egypttours.com/api/v1` |
+| Environment | baseUrl Value |
+|-------------|---------------|
+| **Development** | `http://localhost:8080/api/v1` |
+| **Staging** | `https://api-staging.egypttours.com/api/v1` |
+| **Production** | `https://api.egypttours.com/api/v1` |
+| **Mock** | `https://mock.egypttours.com/api/v1` |
+
+---
+
+## Variables
+
+| Variable | Description | Type |
+|----------|-------------|------|
+| `baseUrl` | API base URL | Default |
+| `environment` | Current env (dev/staging/prod/mock) | Default |
+| `version` | API version (v1) | Default |
+| `language` | Content locale (en/es/ar) | Default |
+| `email` | Test user email | Default |
+| `password` | Test user password | Secret |
+| `accessToken` | JWT access token | Auto |
+| `refreshToken` | Refresh token | Auto |
+| `tokenExpiry` | Token expiry timestamp | Auto |
+| `adminEmail` | Admin user email | Default |
+| `adminPassword` | Admin password | Secret |
+| `tripSlug` | Sample trip slug | Default |
+| `tripId` | Trip ID | Auto |
+| `bookingNumber` | Booking number | Auto |
+| `bookingId` | Booking ID (admin) | Auto |
+| `userId` | User ID (admin) | Auto |
+| `reviewId` | Review ID (admin) | Auto |
+
+---
+
+## Quick Start
+
+1. Import `Egypt_Tours_Master.postman_environment.json`
+2. Set `baseUrl` to your target environment
+3. Set `email`/`password` for test user
+4. Set `adminEmail`/`adminPassword` for admin testing
+5. Run Login → tokens auto-populate
+
+---
+
+## JSON Structure
+
+```json
+{
+  "name": "Egypt Tours - All Environments",
+  "values": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1", "enabled": true },
+    { "key": "email", "value": "test@example.com", "enabled": true },
+    { "key": "accessToken", "value": "", "enabled": true },
+    { "key": "adminEmail", "value": "admin@egypttours.com", "enabled": true }
+  ]
+}
+```

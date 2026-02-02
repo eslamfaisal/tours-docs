@@ -1,0 +1,1302 @@
+{
+     "info": {
+          "_postman_id": "egypt-tours-user-api",
+          "name": "Egypt Tours - User API",
+          "description": "Complete user-facing API for the Egypt Tours Booking Platform.\n\nOrganized by feature folders. Use this collection for frontend development.\n\nSource: docs/api/",
+          "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+     },
+     "auth": {
+          "type": "bearer",
+          "bearer": [
+               {
+                    "key": "token",
+                    "value": "{{accessToken}}",
+                    "type": "string"
+               }
+          ]
+     },
+     "event": [
+          {
+               "listen": "prerequest",
+               "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                         "// Auto-refresh token if expired",
+                         "const tokenExpiry = pm.environment.get('tokenExpiry');",
+                         "const now = Date.now();",
+                         "if (tokenExpiry && now > tokenExpiry - 60000) {",
+                         "    pm.sendRequest({",
+                         "        url: pm.environment.get('baseUrl') + '/auth/refresh',",
+                         "        method: 'POST',",
+                         "        header: { 'Content-Type': 'application/json' },",
+                         "        body: { mode: 'raw', raw: JSON.stringify({ refreshToken: pm.environment.get('refreshToken') }) }",
+                         "    }, function (err, res) {",
+                         "        if (res && res.code === 200) {",
+                         "            var data = res.json();",
+                         "            pm.environment.set('accessToken', data.data.accessToken);",
+                         "            pm.environment.set('tokenExpiry', Date.now() + 3600000);",
+                         "        }",
+                         "    });",
+                         "}"
+                    ]
+               }
+          }
+     ],
+     "item": [
+          {
+               "name": "Auth",
+               "description": "Authentication endpoints - register, login, OAuth, password management.\n\nSource: docs/api/auth.md",
+               "item": [
+                    {
+                         "name": "Register",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecureP@ss123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+1234567890\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/register",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "register"
+                                   ]
+                              },
+                              "description": "Register a new user account.\n\nSource: docs/api/auth.md → POST /auth/register"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 201",
+                                   "status": "Created",
+                                   "code": 201,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Registration successful. Please check your email for verification.\"\n}"
+                              },
+                              {
+                                   "name": "Error - Email Exists",
+                                   "status": "Conflict",
+                                   "code": 409,
+                                   "body": "{\n  \"success\": false,\n  \"error\": { \"code\": \"EMAIL_ALREADY_EXISTS\", \"message\": \"Email already registered\" }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Login",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/login",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "login"
+                                   ]
+                              },
+                              "description": "Authenticate and receive JWT tokens.\n\nSource: docs/api/auth.md → POST /auth/login"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIs...\",\n    \"refreshToken\": \"dGhpcyBpcyBhIHJlZnJlc2...\",\n    \"expiresIn\": 3600,\n    \"user\": { \"id\": 12345, \"email\": \"user@example.com\", \"firstName\": \"John\", \"lastName\": \"Doe\", \"role\": \"CUSTOMER\" }\n  }\n}"
+                              },
+                              {
+                                   "name": "Error - Invalid",
+                                   "status": "Unauthorized",
+                                   "code": 401,
+                                   "body": "{\n  \"success\": false,\n  \"error\": { \"code\": \"INVALID_CREDENTIALS\", \"message\": \"Wrong email/password\" }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "prerequest",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "pm.environment.unset('accessToken');",
+                                             "pm.environment.unset('refreshToken');"
+                                        ]
+                                   }
+                              },
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "if (pm.response.code === 200) {",
+                                             "  var d = pm.response.json();",
+                                             "  pm.environment.set('accessToken', d.data.accessToken);",
+                                             "  pm.environment.set('refreshToken', d.data.refreshToken);",
+                                             "  pm.environment.set('tokenExpiry', Date.now() + (d.data.expiresIn * 1000));",
+                                             "}"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Refresh Token",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/refresh",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "refresh"
+                                   ]
+                              },
+                              "description": "Refresh access token.\n\nSource: docs/api/auth.md → POST /auth/refresh"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"accessToken\": \"eyJhbGciOiJIUzI1NiIs...\", \"expiresIn\": 3600 }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "if (pm.response.code === 200) { var d = pm.response.json(); pm.environment.set('accessToken', d.data.accessToken); pm.environment.set('tokenExpiry', Date.now() + 3600000); }"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Forgot Password",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"email\": \"user@example.com\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/forgot-password",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "forgot-password"
+                                   ]
+                              },
+                              "description": "Request password reset.\n\nSource: docs/api/auth.md → POST /auth/forgot-password"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Password reset instructions sent.\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Reset Password",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"token\": \"reset_token_from_email\",\n  \"password\": \"NewSecureP@ss123\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/reset-password",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "reset-password"
+                                   ]
+                              },
+                              "description": "Reset password with token.\n\nSource: docs/api/auth.md → POST /auth/reset-password"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Password reset successful.\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Google OAuth",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"idToken\": \"google_id_token\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/google",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "google"
+                                   ]
+                              },
+                              "description": "Google OAuth login.\n\nSource: docs/api/auth.md → POST /auth/google"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"accessToken\": \"...\", \"refreshToken\": \"...\", \"expiresIn\": 3600, \"user\": {} }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "if (pm.response.code === 200) { var d = pm.response.json(); pm.environment.set('accessToken', d.data.accessToken); pm.environment.set('refreshToken', d.data.refreshToken); }"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Facebook OAuth",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"accessToken\": \"facebook_token\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/facebook",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "facebook"
+                                   ]
+                              },
+                              "description": "Facebook OAuth login.\n\nSource: docs/api/auth.md → POST /auth/facebook"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"accessToken\": \"...\", \"refreshToken\": \"...\", \"expiresIn\": 3600, \"user\": {} }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "if (pm.response.code === 200) { var d = pm.response.json(); pm.environment.set('accessToken', d.data.accessToken); pm.environment.set('refreshToken', d.data.refreshToken); }"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Verify Email",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/verify-email?token=verification_token",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "verify-email"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "token",
+                                             "value": "verification_token"
+                                        }
+                                   ]
+                              },
+                              "description": "Verify email with token.\n\nSource: docs/api/auth.md → GET /auth/verify-email"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Email verified.\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Logout",
+                         "request": {
+                              "method": "POST",
+                              "url": {
+                                   "raw": "{{baseUrl}}/auth/logout",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "auth",
+                                        "logout"
+                                   ]
+                              },
+                              "description": "Invalidate session.\n\nSource: docs/api/auth.md → POST /auth/logout"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Logged out.\"\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "pm.environment.unset('accessToken'); pm.environment.unset('refreshToken'); pm.environment.unset('tokenExpiry');"
+                                        ]
+                                   }
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Trips",
+               "description": "Browse and view trip packages.\n\nSource: docs/api/trips.md",
+               "item": [
+                    {
+                         "name": "List Trips",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/trips?page=1&pageSize=20&sort=rating&order=desc",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "trips"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "destination",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "type",
+                                             "value": "",
+                                             "disabled": true,
+                                             "description": "PACKAGE, DAY_TOUR, CRUISE"
+                                        },
+                                        {
+                                             "key": "minPrice",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "maxPrice",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "minRating",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "sort",
+                                             "value": "rating"
+                                        },
+                                        {
+                                             "key": "order",
+                                             "value": "desc"
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        },
+                                        {
+                                             "key": "pageSize",
+                                             "value": "20"
+                                        },
+                                        {
+                                             "key": "locale",
+                                             "value": "",
+                                             "disabled": true
+                                        }
+                                   ]
+                              },
+                              "description": "Get paginated trips with filters.\n\nSource: docs/api/trips.md → GET /trips"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"id\": 1, \"slug\": \"pyramids-day-tour\", \"title\": \"Pyramids of Giza Day Tour\", \"price\": 89.00, \"rating\": 4.8 }],\n  \"pagination\": { \"page\": 1, \"pageSize\": 20, \"totalItems\": 45, \"totalPages\": 3 }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                             "pm.test('Has data', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Trip Details",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/trips/{{tripSlug}}",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "trips",
+                                        "{{tripSlug}}"
+                                   ]
+                              },
+                              "description": "Get full trip details.\n\nSource: docs/api/trips.md → GET /trips/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 1, \"slug\": \"pyramids-day-tour\", \"title\": \"Pyramids of Giza Day Tour\", \"description\": \"...\", \"pricing\": { \"basePrice\": 89.00, \"childPrice\": 45.00, \"currency\": \"USD\" }, \"itinerary\": [], \"included\": [], \"excluded\": [] }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Trip Reviews",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/trips/{{tripSlug}}/reviews?page=1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "trips",
+                                        "{{tripSlug}}",
+                                        "reviews"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "sort",
+                                             "value": "recent",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        }
+                                   ]
+                              },
+                              "description": "Get trip reviews.\n\nSource: docs/api/trips.md → GET /trips/{slug}/reviews"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"id\": 101, \"rating\": 5, \"comment\": \"Amazing!\", \"author\": { \"firstName\": \"Sarah\" }, \"verified\": true }]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Check Availability",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/trips/{{tripSlug}}/availability?from=2026-03-01&to=2026-03-31",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "trips",
+                                        "{{tripSlug}}",
+                                        "availability"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "from",
+                                             "value": "2026-03-01"
+                                        },
+                                        {
+                                             "key": "to",
+                                             "value": "2026-03-31"
+                                        }
+                                   ]
+                              },
+                              "description": "Check availability for dates.\n\nSource: docs/api/trips.md → GET /trips/{slug}/availability"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"available\": [{ \"date\": \"2026-03-01\", \"spots\": 15, \"price\": 89.00 }], \"unavailable\": [] }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Bookings",
+               "description": "Create and manage reservations.\n\nSource: docs/api/bookings.md",
+               "item": [
+                    {
+                         "name": "Create Booking",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"tripId\": 1,\n  \"travelDate\": \"2026-03-15\",\n  \"adults\": 2,\n  \"children\": 1,\n  \"addOns\": [1],\n  \"travelers\": [\n    { \"firstName\": \"John\", \"lastName\": \"Doe\", \"nationality\": \"American\", \"passportNumber\": \"AB123\", \"dateOfBirth\": \"1985-05-15\", \"travelerType\": \"ADULT\" },\n    { \"firstName\": \"Jane\", \"lastName\": \"Doe\", \"nationality\": \"American\", \"passportNumber\": \"CD456\", \"dateOfBirth\": \"1988-08-20\", \"travelerType\": \"ADULT\" },\n    { \"firstName\": \"Tim\", \"lastName\": \"Doe\", \"nationality\": \"American\", \"dateOfBirth\": \"2018-03-10\", \"travelerType\": \"CHILD\" }\n  ],\n  \"specialRequests\": \"Vegetarian meals\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/bookings",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "bookings"
+                                   ]
+                              },
+                              "description": "Create a new booking.\n\nSource: docs/api/bookings.md → POST /bookings"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 201",
+                                   "status": "Created",
+                                   "code": 201,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 501, \"bookingNumber\": \"ET-A1B2C3D4\", \"status\": \"PENDING_PAYMENT\", \"totalPrice\": 223.00, \"paymentUrl\": \"https://checkout.stripe.com/...\" }\n}"
+                              },
+                              {
+                                   "name": "Error - Unavailable",
+                                   "status": "Unprocessable Entity",
+                                   "code": 422,
+                                   "body": "{\n  \"success\": false,\n  \"error\": { \"code\": \"TRIP_UNAVAILABLE\", \"message\": \"Trip not available on date\" }\n}"
+                              }
+                         ],
+                         "event": [
+                              {
+                                   "listen": "test",
+                                   "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                             "if (pm.response.code === 201) { pm.environment.set('bookingNumber', pm.response.json().data.bookingNumber); }"
+                                        ]
+                                   }
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get My Bookings",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/bookings?page=1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "bookings"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "status",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        }
+                                   ]
+                              },
+                              "description": "Get user's bookings.\n\nSource: docs/api/bookings.md → GET /account/bookings"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"id\": 501, \"bookingNumber\": \"ET-A1B2C3D4\", \"trip\": { \"title\": \"Pyramids Day Tour\" }, \"travelDate\": \"2026-03-15\", \"status\": \"CONFIRMED\" }]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Booking Details",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/bookings/{{bookingNumber}}",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "bookings",
+                                        "{{bookingNumber}}"
+                                   ]
+                              },
+                              "description": "Get booking details.\n\nSource: docs/api/bookings.md → GET /account/bookings/{bookingNumber}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"bookingNumber\": \"ET-A1B2C3D4\", \"trip\": {}, \"travelers\": [], \"pricing\": { \"total\": 223.00 }, \"status\": \"CONFIRMED\" }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Cancel Booking",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"reason\": \"Change of plans\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/bookings/{{bookingNumber}}/cancel",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "bookings",
+                                        "{{bookingNumber}}",
+                                        "cancel"
+                                   ]
+                              },
+                              "description": "Cancel and check refund.\n\nSource: docs/api/bookings.md → POST /account/bookings/{bookingNumber}/cancel"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"bookingNumber\": \"ET-A1B2C3D4\", \"status\": \"CANCELLED\", \"refund\": { \"eligible\": true, \"amount\": 167.25 } }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Download Invoice",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/bookings/{{bookingNumber}}/invoice",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "bookings",
+                                        "{{bookingNumber}}",
+                                        "invoice"
+                                   ]
+                              },
+                              "description": "Download invoice PDF.\n\nSource: docs/api/bookings.md → GET /account/bookings/{bookingNumber}/invoice"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - PDF",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "header": [
+                                        {
+                                             "key": "Content-Type",
+                                             "value": "application/pdf"
+                                        }
+                                   ],
+                                   "body": "[PDF]"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Account",
+               "description": "User profile and preferences.\n\nSource: docs/api/users.md",
+               "item": [
+                    {
+                         "name": "Get Profile",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/profile",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "profile"
+                                   ]
+                              },
+                              "description": "Get user profile.\n\nSource: docs/api/users.md → GET /account/profile"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 12345, \"email\": \"user@example.com\", \"firstName\": \"John\", \"lastName\": \"Doe\", \"phone\": \"+123456\", \"role\": \"CUSTOMER\" }\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Update Profile",
+                         "request": {
+                              "method": "PUT",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"phone\": \"+1987654321\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/profile",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "profile"
+                                   ]
+                              },
+                              "description": "Update profile.\n\nSource: docs/api/users.md → PUT /account/profile"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Profile updated\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Change Password",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"currentPassword\": \"OldP@ss123\",\n  \"newPassword\": \"NewP@ss456\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/change-password",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "change-password"
+                                   ]
+                              },
+                              "description": "Change password.\n\nSource: docs/api/users.md → POST /account/change-password"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Password changed\"\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Wishlist",
+               "description": "Save favorite trips.\n\nSource: docs/api/users.md",
+               "item": [
+                    {
+                         "name": "Get Wishlist",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/wishlist",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "wishlist"
+                                   ]
+                              },
+                              "description": "Get saved trips.\n\nSource: docs/api/users.md → GET /account/wishlist"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"id\": 1, \"slug\": \"pyramids-day-tour\", \"title\": \"Pyramids Tour\", \"price\": 89.00 }]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Add to Wishlist",
+                         "request": {
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"tripId\": 1\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/wishlist",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "wishlist"
+                                   ]
+                              },
+                              "description": "Add trip to wishlist.\n\nSource: docs/api/users.md → POST /account/wishlist"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 201",
+                                   "status": "Created",
+                                   "code": 201,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Added to wishlist\"\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Remove from Wishlist",
+                         "request": {
+                              "method": "DELETE",
+                              "url": {
+                                   "raw": "{{baseUrl}}/account/wishlist/1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "account",
+                                        "wishlist",
+                                        "1"
+                                   ]
+                              },
+                              "description": "Remove from wishlist.\n\nSource: docs/api/users.md → DELETE /account/wishlist/{tripId}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Removed\"\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Destinations",
+               "description": "Browse travel destinations.\n\nSource: docs/api/content.md",
+               "item": [
+                    {
+                         "name": "List Destinations",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/destinations",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "destinations"
+                                   ]
+                              },
+                              "description": "Get all destinations.\n\nSource: docs/api/content.md → GET /destinations"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"slug\": \"cairo\", \"name\": \"Cairo\", \"tripCount\": 15 }, { \"slug\": \"luxor\", \"name\": \"Luxor\", \"tripCount\": 12 }]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Destination",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/destinations/cairo",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "destinations",
+                                        "cairo"
+                                   ]
+                              },
+                              "description": "Get destination details.\n\nSource: docs/api/content.md → GET /destinations/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"slug\": \"cairo\", \"name\": \"Cairo\", \"description\": \"...\", \"highlights\": [\"Pyramids\", \"Museum\"], \"trips\": [] }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Blog",
+               "description": "Travel articles and guides.\n\nSource: docs/api/content.md",
+               "item": [
+                    {
+                         "name": "List Posts",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/blog?page=1",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "blog"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "category",
+                                             "value": "",
+                                             "disabled": true
+                                        },
+                                        {
+                                             "key": "page",
+                                             "value": "1"
+                                        }
+                                   ]
+                              },
+                              "description": "Get blog posts.\n\nSource: docs/api/content.md → GET /blog"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"slug\": \"best-time-to-visit-egypt\", \"title\": \"Best Time to Visit Egypt\", \"excerpt\": \"...\" }]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Post",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/blog/best-time-to-visit-egypt",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "blog",
+                                        "best-time-to-visit-egypt"
+                                   ]
+                              },
+                              "description": "Get full post.\n\nSource: docs/api/content.md → GET /blog/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"slug\": \"best-time-to-visit-egypt\", \"title\": \"Best Time to Visit Egypt\", \"content\": \"...\" }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Vlogs",
+               "description": "Travel videos.\n\nSource: docs/api/content.md",
+               "item": [
+                    {
+                         "name": "List Vlogs",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/vlogs",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "vlogs"
+                                   ]
+                              },
+                              "description": "Get vlogs.\n\nSource: docs/api/content.md → GET /vlogs"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": [{ \"slug\": \"exploring-luxor\", \"title\": \"Exploring Luxor\", \"videoUrl\": \"https://youtube.com/...\" }]\n}"
+                              }
+                         ]
+                    },
+                    {
+                         "name": "Get Vlog",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/vlogs/exploring-luxor",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "vlogs",
+                                        "exploring-luxor"
+                                   ]
+                              },
+                              "description": "Get vlog details.\n\nSource: docs/api/content.md → GET /vlogs/{slug}"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"slug\": \"exploring-luxor\", \"title\": \"Exploring Luxor\", \"description\": \"...\", \"videoUrl\": \"...\" }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Search",
+               "description": "Global search.\n\nSource: docs/api/content.md",
+               "item": [
+                    {
+                         "name": "Search",
+                         "request": {
+                              "method": "GET",
+                              "url": {
+                                   "raw": "{{baseUrl}}/search?q=pyramids",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "search"
+                                   ],
+                                   "query": [
+                                        {
+                                             "key": "q",
+                                             "value": "pyramids"
+                                        },
+                                        {
+                                             "key": "type",
+                                             "value": "",
+                                             "disabled": true
+                                        }
+                                   ]
+                              },
+                              "description": "Search trips, blog, destinations.\n\nSource: docs/api/content.md → GET /search"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"data\": { \"trips\": [], \"blog\": [], \"destinations\": [] }\n}"
+                              }
+                         ]
+                    }
+               ]
+          },
+          {
+               "name": "Contact",
+               "description": "Inquiry forms.\n\nSource: docs/api/content.md",
+               "item": [
+                    {
+                         "name": "Submit Inquiry",
+                         "request": {
+                              "auth": {
+                                   "type": "noauth"
+                              },
+                              "method": "POST",
+                              "header": [
+                                   {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                   }
+                              ],
+                              "body": {
+                                   "mode": "raw",
+                                   "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+1234567890\",\n  \"subject\": \"Trip Inquiry\",\n  \"message\": \"I'd like to know more...\",\n  \"tripSlug\": \"pyramids-day-tour\"\n}"
+                              },
+                              "url": {
+                                   "raw": "{{baseUrl}}/contact",
+                                   "host": [
+                                        "{{baseUrl}}"
+                                   ],
+                                   "path": [
+                                        "contact"
+                                   ]
+                              },
+                              "description": "Submit contact form.\n\nSource: docs/api/content.md → POST /contact"
+                         },
+                         "response": [
+                              {
+                                   "name": "Success - 200",
+                                   "status": "OK",
+                                   "code": 200,
+                                   "body": "{\n  \"success\": true,\n  \"message\": \"Thank you! We'll respond within 24 hours.\"\n}"
+                              }
+                         ]
+                    }
+               ]
+          }
+     ]
+}
